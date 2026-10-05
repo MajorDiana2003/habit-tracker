@@ -1,0 +1,29 @@
+# Секреты и настройки (Самое важное!)
+.env
+
+# База данных и локальные логи
+db.sqlite3
+*.log
+telegram_history.log
+
+# Виртуальное окружение Python
+venv/
+.venv/
+env/
+
+# Кэш Python и Django
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+
+# Настройки среды разработки PyCharm
+.idea/
+
+# Отчеты о покрытии тестами (HTMLcov)
+htmlcov/
+.coverage
+.coverage.*
+nosetests.xml
+coverage.xml
