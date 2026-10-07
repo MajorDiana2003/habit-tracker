@@ -1,12 +1,11 @@
-
 services:
   db:
     image: postgres:15-alpine
+    restart: always
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-habit_tracker}
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
-
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
@@ -14,11 +13,13 @@ services:
 
   redis:
     image: redis:7-alpine
+    restart: always
     ports:
       - "6379:6379"
 
   web:
     build: .
+    restart: always
     command: >
       sh -c "python manage.py collectstatic --noinput &&
              python manage.py migrate &&
@@ -36,6 +37,7 @@ services:
 
   celery_worker:
     build: .
+    restart: always
     command: celery -A config worker -l INFO
     volumes:
       - .:/app
@@ -47,6 +49,7 @@ services:
 
   celery_beat:
     build: .
+    restart: always
     command: celery -A config beat -l INFO
     volumes:
       - .:/app
@@ -58,6 +61,7 @@ services:
 
   nginx:
     image: nginx:alpine
+    restart: always
     ports:
       - "80:80"
     volumes:
