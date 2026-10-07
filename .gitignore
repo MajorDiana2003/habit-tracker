@@ -27,3 +27,7 @@ htmlcov/
 .coverage.*
 nosetests.xml
 coverage.xml
+
+# Временные SSH ключи для Yandex Cloud
+deploy_key
+deploy_key.pub
