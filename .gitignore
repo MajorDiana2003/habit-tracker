@@ -29,5 +29,5 @@ nosetests.xml
 coverage.xml
 
 # Временные SSH ключи для Yandex Cloud
-yandex_key
-yandex_key.pub
+deploy_key
+deploy_key.pub
