@@ -75,7 +75,7 @@ jobs:
           sudo mkdir -p /app
           sudo chown -R $USER:$USER /app
           cd /app
-          
+
           if [ ! -d "habit-tracker" ]; then
             git clone -b feature/coursework_1 https://github.com{{ github.repository }}.git habit-tracker
             cd habit-tracker
@@ -84,6 +84,7 @@ jobs:
             git fetch --all
             git reset --hard origin/feature/coursework_1
           fi
+          
           
           cat << 'EOF' > .env
           SECRET_KEY=django-insecure-production-cloud-key-99999
