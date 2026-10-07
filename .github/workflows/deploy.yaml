@@ -77,7 +77,7 @@ jobs:
           cd /app
 
           if [ ! -d "habit-tracker" ]; then
-            git clone -b feature/coursework_1 https://github.com{{ github.repository }}.git habit-tracker
+            git clone -b feature/coursework_1 https://github.com/${{ github.repository }}.git habit-tracker
             cd habit-tracker
           else
             cd habit-tracker
