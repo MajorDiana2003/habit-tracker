@@ -2,6 +2,7 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from habits_app.views import HabitViewSet, PublicHabitListAPIView
 
+
 router = DefaultRouter()
 # Регистрируем ViewSet для CRUD-операций
 router.register(r'habits', HabitViewSet, basename='habits')

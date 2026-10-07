@@ -3,6 +3,7 @@ from rest_framework.permissions import AllowAny
 from users.models import User
 from users.serializers import UserRegisterSerializer
 
+
 class UserRegisterView(CreateAPIView):
     """
     Эндпоинт для регистрации нового пользователя.
@@ -11,4 +12,3 @@ class UserRegisterView(CreateAPIView):
     serializer_class = UserRegisterSerializer
     # Регистрация должна быть доступна всем без авторизации
     permission_classes = [AllowAny]
-

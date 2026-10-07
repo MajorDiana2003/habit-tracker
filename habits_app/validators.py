@@ -2,70 +2,56 @@ from rest_framework.serializers import ValidationError
 
 
 class RewardAndAssociatedHabitValidator:
-    """
-    Исключает одновременный выбор связанной привычки и указания вознаграждения.
-    """
+    """Нельзя одновременно указывать вознаграждение и связанную привычку."""
     def __call__(self, attrs):
-        reward = attrs.get('reward')
-        associated_habit = attrs.get('associated_habit')
+        reward = attrs.get("reward")
+        related_habit = attrs.get("related_habit")
 
-        if reward and associated_habit:
+        if reward and related_habit:
             raise ValidationError(
-                "Нельзя одновременно заполнить поле вознаграждения и поле связанной привычки. "
-                "Можно заполнить только одно из двух полей."
+                "Нельзя одновременно указывать вознаграждение и связанную привычку."
             )
 
 
 class TimeToCompleteValidator:
-    """
-    Проверяет, что время выполнения должно быть не больше 120 секунд.
-    """
+    """Время выполнения должно быть не больше 120 секунд."""
     def __call__(self, attrs):
-        time_to_complete = attrs.get('time_to_complete')
+        duration_seconds = attrs.get("duration_seconds")
 
-        if time_to_complete and time_to_complete > 120:
+        if duration_seconds is not None and duration_seconds > 120:
             raise ValidationError(
                 "Время выполнения должно быть не больше 120 секунд."
             )
 
 
 class AssociatedHabitIsPleasantValidator:
-    """
-    В связанные привычки могут попадать только привычки с признаком приятной привычки.
-    """
+    """Связанная привычка должна быть приятной."""
     def __call__(self, attrs):
-        associated_habit = attrs.get('associated_habit')
+        related_habit = attrs.get("related_habit")
 
-        if associated_habit and not associated_habit.is_pleasant:
+        if related_habit and not related_habit.is_pleasant:
             raise ValidationError(
-                "В связанные привычки могут попадать только привычки с признаком приятной привычки."
+                "Связанная привычка должна быть приятной."
             )
 
 
 class PleasantHabitNoRewardOrAssociationValidator:
-    """
-    У приятной привычки не может быть вознаграждения или связанной привычки.
-    """
+    """У приятной привычки не может быть вознаграждения или связанной привычки."""
     def __call__(self, attrs):
-        is_pleasant = attrs.get('is_pleasant')
-        reward = attrs.get('reward')
-        associated_habit = attrs.get('associated_habit')
-
-        if is_pleasant:
-            if reward or associated_habit:
-                raise ValidationError(
-                    "У приятной привычки не может быть вознаграждения или связанной привычки."
-                )
+        if attrs.get("is_pleasant") and (
+            attrs.get("reward") or attrs.get("related_habit")
+        ):
+            raise ValidationError(
+                "У приятной привычки не может быть вознаграждения или связанной привычки."
+            )
 
 
 class PeriodicityValidator:
-    """
-    Нельзя выполнять привычку реже, чем 1 раз в 7 дней.
-    """
+    """Периодичность должна быть от 1 до 7 дней."""
     def __call__(self, attrs):
-        periodicity = attrs.get('periodicity')
+        periodicity_days = attrs.get("periodicity_days")
 
-        if periodicity and periodicity > 7:
+        if periodicity_days is not None and not (1 <= periodicity_days <= 7):
             raise ValidationError(
-                "Нельзя выполнять привычку реже, чем 1 раз в 7 дней (максимум 7 дней)."
+                "Периодичность должна быть от 1 до 7 дней."
             )

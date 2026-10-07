@@ -2,13 +2,13 @@ from django.contrib.auth import get_user_model
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
-from rest_framework.exceptions import ValidationError
-
+from rest_framework.serializers import ValidationError
 from habits_app.models import Habit
 from habits_app.validators import (
     RewardAndAssociatedHabitValidator,
     PeriodicityValidator
 )
+
 
 User = get_user_model()
 
@@ -31,7 +31,7 @@ class HabitTestCase(APITestCase):
         # Создаем базовую приятную привычку
         self.pleasant_habit = Habit.objects.create(
             user=self.user,
-            place="Дома",
+            place="Дом",
             time="08:00:00",
             action="Принять контрастный душ",
             is_pleasant=True,
@@ -46,7 +46,7 @@ class HabitTestCase(APITestCase):
             "time": "12:00:00",
             "action": "Сделать разминку",
             "is_pleasant": False,
-            "periodicity": 2,
+            "periodicity_days": 2,
             "reward": "Выпить вкусный кофе",
             "is_public": True
         }
@@ -73,9 +73,10 @@ class HabitTestCase(APITestCase):
         """Валидатор: Запрещено одновременно указывать награду и связанную привычку."""
         validator = RewardAndAssociatedHabitValidator()
         bad_attrs = {
-            "associated_habit": self.pleasant_habit,
+            "related_habit": self.pleasant_habit,
             "reward": "Съесть шоколадку"
         }
+
         # Проверяем, что класс валидатора выбрасывает ValidationError при некорректных данных
         with self.assertRaises(ValidationError):
             validator(bad_attrs)
@@ -84,8 +85,9 @@ class HabitTestCase(APITestCase):
         """Валидатор: Запрещено выставлять периодичность реже 1 раза в 7 дней."""
         validator = PeriodicityValidator()
         bad_attrs = {
-            "periodicity": 10
+            "periodicity_days": 10
         }
+
         with self.assertRaises(ValidationError):
             validator(bad_attrs)
 
@@ -104,7 +106,4 @@ class HabitTestCase(APITestCase):
         data = {"action": "Взлом привычки"}
 
         response = self.client.put(url, data, format='json')
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-
-
-
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)

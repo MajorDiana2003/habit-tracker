@@ -1,54 +1,47 @@
-import os
-from datetime import datetime
+import requests
 from celery import shared_task
+from django.conf import settings
+from django.utils import timezone
 from habits_app.models import Habit
 
 
-@shared_task
-def send_habit_reminders():
-    """
-    Периодическая задача для рассылки напоминаний о привычках.
-    Вместо нестабильной отправки в сеть записывает уведомления в локальный файл-лог.
-    """
-    now = datetime.now().time()
+def send_telegram_message(chat_id: str, text: str) -> None:
+    """Прямая отправка текстового сообщения в Telegram-чат."""
+    if not settings.TELEGRAM_BOT_TOKEN:
+        raise RuntimeError("Не задан TELEGRAM_BOT_TOKEN")
 
-
-    # строгий минутный фильтр
-    habits = Habit.objects.select_related('user').filter(
-        time__hour=now.hour,
-        time__minute=now.minute
+    url = (
+        "https://api.telegram.org/bot"
+        f"{settings.TELEGRAM_BOT_TOKEN}/sendMessage"
     )
 
-    log_file_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'telegram_history.log')
+    response = requests.post(
+        url,
+        json={"chat_id": chat_id, "text": text},
+        timeout=10
+    )
+    response.raise_for_status()
+
+
+@shared_task(
+    autoretry_for=(requests.RequestException,),
+    retry_backoff=True,
+    max_retries=5,
+)
+def send_habit_reminders() -> None:
+    """Периодическая задача Celery для проверки и отправки напоминаний."""
+    now = timezone.localtime()
+
+    # Фильтруем привычки по текущему часу и минуте, у которых у пользователя заполнен chat_id
+    habits = Habit.objects.select_related("user").filter(
+        time__hour=now.hour,
+        time__minute=now.minute,
+        user__telegram_chat_id__isnull=False,
+    )
 
     for habit in habits:
-        if habit.user.telegram_chat_id:
-            # Формируем красивый текст сообщения для лога
-            message = (
-                f"========================================\n"
-                f"🤖 [DIANA_HABIT_BOT] СИМУЛЯЦИЯ ОТПРАВКИ В TELEGRAM\n"
-                f"📅 Время отправки: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
-                f"👤 Получатель (Chat ID): {habit.user.telegram_chat_id} ({habit.user.email})\n"
-                f"----------------------------------------\n"
-                f"⏰ Напоминание! Пора выполнить привычку:\n"
-                f"📌 Действие: {habit.action}\n"
-                f"📍 Место: {habit.place}\n"
-            )
-
-            if hasattr(habit, 'reward') and habit.reward:
-                message += f"🎁 Награда после выполнения: {habit.reward}\n"
-            elif hasattr(habit, 'associated_habit') and habit.associated_habit:
-                message += f"🎉 Связанная приятная привычка: {habit.associated_habit.action}\n"
-
-            message += "========================================\n\n"
-
-            # Записываем сформированное уведомление в файл telegram_history.log
-            try:
-                with open(log_file_path, 'a', encoding='utf-8') as log_file:
-                    log_file.write(message)
-                print(f"✅ Имитация отправки для {habit.user.email} успешно зафиксирована в telegram_history.log")
-            except Exception as e:
-                print(f"Ошибка записи лога: {e}")
-
-
-
+        text = (
+            f"Пора выполнить привычку: {habit.action}. "
+            f"Место: {habit.place}."
+        )
+        send_telegram_message(habit.user.telegram_chat_id, text)

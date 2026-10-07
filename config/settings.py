@@ -1,13 +1,12 @@
-
 import os
 from pathlib import Path
 from dotenv import load_dotenv
+from celery.schedules import crontab
+
 
 # Находим путь к .env и загружаем переменные
 BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(os.path.join(BASE_DIR, '.env'))
-
-
 
 
 # Quick-start development settings - unsuitable for production
@@ -15,6 +14,10 @@ load_dotenv(os.path.join(BASE_DIR, '.env'))
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.getenv('SECRET_KEY')
+
+# --- Настройки Telegram ---
+TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
+
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG') == 'True'
@@ -109,7 +112,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Europe/Moscow'
 
 USE_I18N = True
 
@@ -128,8 +131,12 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
 
-# Настройки CORS
-CORS_ALLOW_ALL_ORIGINS = True
+# --- Безопасная настройка CORS ---
+CORS_ALLOWED_ORIGINS = [
+    origin.strip()
+    for origin in os.getenv("CORS_ALLOWED_ORIGINS", "").split(",")
+    if origin.strip()
+]
 
 # Настройки Django REST Framework
 REST_FRAMEWORK = {
@@ -153,14 +160,20 @@ SPECTACULAR_SETTINGS = {
     'SERVE_INCLUDE_SCHEMA': False,
 }
 
-# Настройки Celery
-CELERY_BROKER_URL = 'redis://127.0.0.1:6379/0'
-CELERY_RESULT_BACKEND = 'redis://127.0.0.1:6379/0'
 
-CELERY_TIMEZONE = TIME_ZONE
-CELERY_BROKER_TRANSPORT_OPTIONS = {'redis_version': 3}
+# Базовые настройки подключения
+CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL", "redis://127.0.0.1:6379/0")
+CELERY_RESULT_BACKEND = os.getenv("CELERY_RESULT_BACKEND", "redis://127.0.0.1:6379/0")
 
+# Железобетонное отключение протокола RESP3 (команды HELLO) для Celery 5+
+CELERY_BROKER_TRANSPORT_OPTIONS = {
+    'socket_timeout': 10,
+    'sep': ':',
+    'redis_backend_transport_options': {'protocol': 2},
+    'client_properties': {'protocol': 2}
+}
+CELERY_REDIS_BACKEND_TRANSPORT_OPTIONS = {'protocol': 2}
 
-CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
-
-
+# Переводим Celery в синхронный режим для обхода багов Redis на Windows
+CELERY_TASK_ALWAYS_EAGER = True
+CELERY_TASK_EAGER_PROPAGATES = True

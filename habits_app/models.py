@@ -33,7 +33,7 @@ class Habit(models.Model):
     periodicity_days = models.PositiveIntegerField(default=1, verbose_name="Периодичность (в днях)")
 
     # Вознаграждение за выполнение (может быть пустым)
-    reward = models.CharField(max_length=255, blank=True, null=True, verbose_name="Вознаграждение")
+    reward = models.CharField(max_length=255, blank=True, default="", verbose_name="Вознаграждение")
 
     # Время на выполнение в секундах (по умолчанию 120 секунд)
     duration_seconds = models.PositiveIntegerField(default=120, verbose_name="Время на выполнение (в секундах)")
@@ -41,10 +41,9 @@ class Habit(models.Model):
     is_public = models.BooleanField(default=False, verbose_name="Признак публичности")
 
     class Meta:
-        verbose_name = "Привилегия / Привычка"
+        verbose_name = "Привычка"
         verbose_name_plural = "Привычки"
         ordering = ['id']
 
     def __str__(self):
         return f"{self.action} в {self.time} ({self.place})"
-

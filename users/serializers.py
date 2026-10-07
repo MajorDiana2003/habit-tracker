@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from users.models import User
 
+
 class UserRegisterSerializer(serializers.ModelSerializer):
     # Пароль делаем доступным только для записи, чтобы он не возвращался в ответе API
     password = serializers.CharField(write_only=True)

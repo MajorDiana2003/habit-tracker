@@ -17,10 +17,16 @@ class HabitViewSet(ModelViewSet):
     permission_classes = [IsAuthenticated, IsOwner]
 
     def get_queryset(self):
-        # Отдаем только привычки, принадлежащие текущему авторизованному пользователю
-        if self.request.user.is_authenticated:
+        # Если юзер не авторизован (например, при генерации схемы документации)
+        if not self.request.user.is_authenticated:
+            return Habit.objects.none()
+
+        # Для метода LIST возвращаем только свои привычки
+        if self.action == 'list':
             return Habit.objects.filter(user=self.request.user).order_by('id')
-        return Habit.objects.none()
+
+
+        return Habit.objects.all().order_by('id')
 
     def perform_create(self, serializer):
         # Автоматически привязываем создаваемую привычку к текущему пользователю
@@ -114,5 +120,3 @@ def home_page_view(request):
     </html>
     """
     return HttpResponse(html_content)
-
-

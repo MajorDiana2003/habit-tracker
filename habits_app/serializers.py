@@ -13,14 +13,26 @@ class HabitSerializer(serializers.ModelSerializer):
     class Meta:
         model = Habit
 
-        fields = '__all__'
-        read_only_fields = ('user',)
+        fields = (
+            'id',
+            'user',
+            'place',
+            'time',
+            'action',
+            'is_pleasant',
+            'related_habit',
+            'periodicity_days',
+            'reward',
+            'duration_seconds',
+            'is_public',
+        )
 
+        read_only_fields = ('id', 'user')
 
         validators = [
             RewardAndAssociatedHabitValidator(),
             TimeToCompleteValidator(),
             AssociatedHabitIsPleasantValidator(),
             PleasantHabitNoRewardOrAssociationValidator(),
-            PeriodicityValidator()
+            PeriodicityValidator(),
         ]
